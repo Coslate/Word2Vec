@@ -19,14 +19,14 @@ def main():
     currdir = path.dirname(path.abspath(__file__))
 #    currdir = pathlib.Path(__file__).parent
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-    (word_dim, text_file, algor_word2vec_sg, query_str, topn, verbose, train, is_debug, out_name, window, out_dir) = ArgumentParser()
+    (word_dim, text_file, algor_word2vec_sg, query_str, topn, verbose, train, is_debug, out_name, window, out_dir, out_model_folder, out_img_folder) = ArgumentParser()
     mark_img_full_path = path.join(currdir, "cloud.png")
     font_full_path     = path.join(currdir, "NotoSerifCJKtc-hinted/NotoSerifCJKtc-Regular.otf")
     abs_file_name      = out_name
     model_name         = basename(text_file)+'.sg_'+str(algor_word2vec_sg)+'.model'
-    model_path         = path.join(currdir, "Generate_Model")
+    model_path         = path.join(currdir, out_model_folder)
     model_full_path    = path.join(model_path, model_name)
-    out_img_name_path  = path.join(currdir, "Generate_WC_Image")
+    out_img_name_path  = path.join(currdir, out_img_folder)
     out_img_name       = abs_file_name+"."+query_str+".png"
     out_img_full_path  = path.join(out_img_name_path, out_img_name)
 
@@ -86,19 +86,23 @@ def ArgumentParser():
     window            = 5
     out_dir           = "."
     word_si           = 50
+    out_model_folder  = ""
+    out_img_folder    = ""
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--text_file"        , "-text_file", help="The text file to train.")
-    parser.add_argument("--algor_word2vec_sg", "-alg_sg"   , help="Set 1 to use skip-gram algorithm. Set 0 to use CBOW algorithm. Default is 1.")
-    parser.add_argument("--query_str"        , "-q_str"    , help="The string that you want to query the result with. You can input the team name.")
-    parser.add_argument("--topn"             , "-topn"     , help="It will get the top \{topn\} simularity of \{query_str\} from the trained model.")
-    parser.add_argument("--verbose"          , "-verb"     , help="Set 1 to print out debugging messages.")
-    parser.add_argument("--train"            , "-train"    , help="Set 1 to train a new model with \{text_file\}, and it will overite the old model. Set 0 to simply use the model that trained previously.")
-    parser.add_argument("--is_debug"         , "-isd"      , help="Set 1 to show debug messages.")
-    parser.add_argument("--out_name"         , "-out_name" , help="The output name of the model and the word_cloud image")
-    parser.add_argument("--window"           , "-window"   , help="The window size to train the model")
-    parser.add_argument("--out_dir"          , "-odir"     , help="The output directory of the keyword")
-    parser.add_argument("--word_dim"         , "-word_dim" , help="The dimensionaliry of the vector to represent a word")
+    parser.add_argument("--text_file"        , "-text_file"    , help="The text file to train.")
+    parser.add_argument("--algor_word2vec_sg", "-alg_sg"       , help="Set 1 to use skip-gram algorithm. Set 0 to use CBOW algorithm. Default is 1.")
+    parser.add_argument("--query_str"        , "-q_str"        , help="The string that you want to query the result with. You can input the team name.")
+    parser.add_argument("--topn"             , "-topn"         , help="It will get the top \{topn\} simularity of \{query_str\} from the trained model.")
+    parser.add_argument("--verbose"          , "-verb"         , help="Set 1 to print out debugging messages.")
+    parser.add_argument("--train"            , "-train"        , help="Set 1 to train a new model with \{text_file\}, and it will overite the old model. Set 0 to simply use the model that trained previously.")
+    parser.add_argument("--is_debug"         , "-isd"          , help="Set 1 to show debug messages.")
+    parser.add_argument("--out_name"         , "-out_name"     , help="The output name of the model and the word_cloud image")
+    parser.add_argument("--window"           , "-window"       , help="The window size to train the model")
+    parser.add_argument("--out_dir"          , "-odir"         , help="The output directory of the keyword")
+    parser.add_argument("--word_dim"         , "-word_dim"     , help="The dimensionaliry of the vector to represent a word")
+    parser.add_argument("--out_model_folder" , "-out_mod_fold" , help="The output folder name of the trained model")
+    parser.add_argument("--out_img_folder"   , "-out_img_fold" , help="The output folder name of the generated wordcloud image")
 
 
     args = parser.parse_args()
@@ -135,7 +139,13 @@ def ArgumentParser():
     if args.word_dim:
         word_dim = int(args.word_dim)
 
-    return (word_dim, text_file, algor_word2vec_sg, query_str, topn, verbose, train, is_debug, out_name, window, out_dir)
+    if args.out_model_folder:
+        out_model_folder = args.out_model_folder
+
+    if args.out_img_folder:
+        out_img_folder = args.out_img_folder
+
+    return (word_dim, text_file, algor_word2vec_sg, query_str, topn, verbose, train, is_debug, out_name, window, out_dir, out_model_folder, out_img_folder)
 
 def GenDictWithMaxValue(list_of_tuples):
     ans_dict = {}

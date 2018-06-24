@@ -2,12 +2,18 @@
 
 ######################## First Run #########################
 set current_dir = `pwd`
-set scrape_ptt_path = $argv[1]
-set start_timing    = $argv[2]
-set end_timing      = $argv[3]
+set scrape_ptt_path            = $argv[1]
+set start_timing               = $argv[2]
+set end_timing                 = $argv[3]
+set preprocess_input_name      = $argv[4]
+set keyword_top_n              = $argv[5]
+set word2vec_word_dim          = $argv[6]
+set word2vec_window            = $argv[7]
+set word2vec_alg               = $argv[8]
+set word2vec_out_model_folder  = $argv[9]
+set word2vec_out_img_folder    = $argv[10]
 set timeing_slot    = ${start_timing}_${end_timing}
-set preprocess_input_name = "Total_${timeing_slot}"
-set debug_path      = /Users/coslate/Word2Vec/debug_folder_${preprocess_input_name}
+set debug_path      = debug_folder_${preprocess_input_name}
 
 if ( -d $debug_path ) then
     rm -rf $debug_path
@@ -16,6 +22,13 @@ else
     mkdir $debug_path
 endif
 
+if ( !( -d $word2vec_out_model_folder) ) then
+    mkdir $word2vec_out_model_folder
+endif
+
+if ( !( -d $word2vec_out_img_folder) ) then
+    mkdir $word2vec_out_img_folder
+endif
 ###################### 1st preprocess #######################
 cd ./Preprocess
 set preprocess_folder = ${preprocess_input_name}_1st_preprocess
@@ -27,7 +40,7 @@ else
 endif
 
 echo "--------------------1st preprocess-------------------------"
-./preprocess.py -file $preprocess_input_name -odir $preprocess_folder -cdir $scrape_ptt_path/Total_20180618_20130510 -st $start_timing -et $end_timing -isd 1 -isp 1 > $debug_path/debug_1st_preprocess.$preprocess_input_name.$timeing_slot.log
+./preprocess.py -file $preprocess_input_name -odir $preprocess_folder -cdir $scrape_ptt_path -st $start_timing -et $end_timing -isd 1 -isp 1 > $current_dir/$debug_path/debug_1st_preprocess.$preprocess_input_name.$timeing_slot.log
 cd $current_dir
 
 
@@ -44,7 +57,7 @@ set preprocess_output_folder = "${preprocess_input_name}_preprocessed"
 set preprocess_output_file   = "${preprocess_output_folder}_${timeing_slot}"
 
 echo "--------------------1st word segmentation-------------------------"
-./word_segmentation.py -file ../Word2Vec/Preprocess/$preprocess_folder/$preprocess_output_folder/$preprocess_output_file  -odir $word_seg_folder -verb 1 > $debug_path/debug_1st_word_segmentation.$preprocess_input_name.$timeing_slot.log
+./word_segmentation.py -file ../Word2Vec/Preprocess/$preprocess_folder/$preprocess_output_folder/$preprocess_output_file  -odir $word_seg_folder -verb 1 > $current_dir/$debug_path/debug_1st_word_segmentation.$preprocess_input_name.$timeing_slot.log
 cd $current_dir
 
 ###################### 1st word2vec #######################
@@ -107,6 +120,7 @@ if ( -d $word2vec_dir ) then
 else 
     mkdir $word2vec_dir
 endif
+
 set word_seg_output_file = "${preprocess_output_file}.segmentated"
 
 echo "--------------------1st word2vec-------------------------"
@@ -116,9 +130,9 @@ foreach team ( $team_list )
     
     echo "team = ${team}"
     if ($i == 1) then 
-        ./word2vec_wordcloud.py -text_file ../Word_Segmentation/$word_seg_folder/$word_seg_output_file -alg_sg 1 -window 20 -word_dim 50 -q_str $team -topn 400 -verb 1 -train 1 -out_name $out_name -odir $word2vec_dir > $debug_path/debug_1st_word2vec.$preprocess_input_name.$timeing_slot.$team.log
+        ./word2vec_wordcloud.py -text_file ../Word_Segmentation/$word_seg_folder/$word_seg_output_file -alg_sg $word2vec_alg -window $word2vec_window -word_dim $word2vec_word_dim -q_str $team -topn $keyword_top_n -verb 1 -train 1 -out_name $out_name -odir $word2vec_dir -out_mod_fold $word2vec_out_model_folder -out_img_fold $word2vec_out_img_folder > $debug_path/debug_1st_word2vec.$preprocess_input_name.$timeing_slot.$team.log
     else
-        ./word2vec_wordcloud.py -text_file ../Word_Segmentation/$word_seg_folder/$word_seg_output_file -alg_sg 1 -window 20 -word_dim 50 -q_str $team -topn 400 -verb 1 -train 0 -out_name $out_name -odir $word2vec_dir > $debug_path/debug_1st_word2vec.$preprocess_input_name.$timeing_slot.$team.log
+        ./word2vec_wordcloud.py -text_file ../Word_Segmentation/$word_seg_folder/$word_seg_output_file -alg_sg $word2vec_alg -window $word2vec_window -word_dim $word2vec_word_dim -q_str $team -topn $keyword_top_n -verb 1 -train 0 -out_name $out_name -odir $word2vec_dir -out_mod_fold $word2vec_out_model_folder -out_img_fold $word2vec_out_img_folder > $debug_path/debug_1st_word2vec.$preprocess_input_name.$timeing_slot.$team.log
     endif
     @ i += 1
 end
@@ -145,7 +159,7 @@ foreach team ( $team_list_eng )
 
     echo "team = ${team}"
     echo "keyword_thresh = $keyword_thresh[$i]"
-    ./preprocess.py -file $file -odir $preprocess_folder -cdir $scrape_ptt_path/Total_20180618_20130510 -st $start_timing -et $end_timing -isd 1 -isp 1 -key $key -key_b $key_b -thnum $keyword_thresh[$i] -mkn 10 > $debug_path/debug_2nd_preprocess.$preprocess_input_name.$timeing_slot.$team.log
+    ./preprocess.py -file $file -odir $preprocess_folder -cdir $scrape_ptt_path -st $start_timing -et $end_timing -isd 1 -isp 1 -key $key -key_b $key_b -thnum $keyword_thresh[$i] -mkn 10 > $current_dir/$debug_path/debug_2nd_preprocess.$preprocess_input_name.$timeing_slot.$team.log
 
     @ i+=1
 end
@@ -172,7 +186,7 @@ foreach team ( $team_list_eng )
     set file = "../Word2Vec/Preprocess/$preprocess_folder/$preprocess_output_folder/$preprocess_output_file"
     set stop_word_file = "./stopword_lib/stopwords.txt.$team"
 
-    ./word_segmentation.py -file $file -odir $word_seg_folder -verb 1 -stop_word_file $stop_word_file > $debug_path/debug_2nd_word_segmentation.$preprocess_input_name.$timeing_slot.$team.log
+    ./word_segmentation.py -file $file -odir $word_seg_folder -verb 1 -stop_word_file $stop_word_file > $current_dir/$debug_path/debug_2nd_word_segmentation.$preprocess_input_name.$timeing_slot.$team.log
 end
 cd $current_dir
 
@@ -198,7 +212,7 @@ foreach team ( $team_list )
     set out_name = "${preprocess_input_name}_2nd_stop_$team_list_eng[$i]"
     set text_file = "../Word_Segmentation/$word_seg_folder/$word_seg_output_file"
 
-    ./word2vec_wordcloud.py -text_file $text_file -alg_sg 1 -window 20 -word_dim 50 -q_str $team -topn 400 -verb 1 -train 1 -out_name $out_name -odir $word2vec_dir > $debug_path/debug_2nd_word2vec.$preprocess_input_name.$timeing_slot.$team.log
+    ./word2vec_wordcloud.py -text_file $text_file -alg_sg $word2vec_alg -window $word2vec_window -word_dim $word2vec_word_dim -q_str $team -topn $keyword_top_n -verb 1 -train 1 -out_name $out_name -odir $word2vec_dir -out_mod_fold $word2vec_out_model_folder -out_img_fold $word2vec_out_img_folder > $debug_path/debug_2nd_word2vec.$preprocess_input_name.$timeing_slot.$team.log
     @ i += 1
 end
 
@@ -231,7 +245,7 @@ foreach team ( $team_list_eng )
     set key_word_file = "../Word2Vec/$word2vec_dir/keyword_result_${preprocess_input_name}_stop_$team"
 
 
-    ./keyword_extraction.py -text_file $text_file -topn 400 -out_name $out_name -stop_word_file $stop_word_file -key_file $key_word_file -odir $keyword_extraction_dir > $debug_path/debug_final_keyword_extraction.$preprocess_input_name.$timeing_slot.$team.log
+    ./keyword_extraction.py -text_file $text_file -topn $keyword_top_n -out_name $out_name -stop_word_file $stop_word_file -key_file $key_word_file -odir $keyword_extraction_dir -out_img_fold $word2vec_out_img_folder > $current_dir/$debug_path/debug_final_keyword_extraction.$preprocess_input_name.$timeing_slot.$team.log
     endif
     @ i += 1
 end
